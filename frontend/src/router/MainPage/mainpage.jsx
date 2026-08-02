@@ -10,10 +10,49 @@ const posts = [
 
 export default function MainPage() {
   const navigate = useNavigate();
-  const logout = () => {
-    window.localStorage.removeItem('nebulaLoggedIn');
-    navigate('/login', { replace: true });
-  };
+  const currentUser = JSON.parse(window.localStorage.getItem('nebulaUser') || '{}');
+  const openSettings = () => currentUser.uuid && navigate(`/User/${currentUser.uuid}`);
 
-  return <div className="blog"><header><div className="brand"><b>N<span>•</span></b> NEBULA BLOG</div><nav>首页　探索　关于我</nav><div className="user"><Search /><button onClick={logout}><User /> 林墨</button></div></header><main><section className="hero"><small>THE DIGITAL GARDEN</small><h1>记录思考，<em>保持生长。</em></h1><p>一个关于设计、技术与生活的个人博客。<br />在这里，分享有趣的想法与真实的实践。</p><button>开始探索 <ArrowRight /></button><div className="metrics">128 篇文章　　24.8K 次阅读　　∞ 个灵感</div></section><section className="content"><small>LATEST STORIES</small><h2>最新文章</h2><div className="posts">{posts.map((post, index) => <article className={`post c${index}`} key={post[1]}><div className="cover"><span>{post[0]}</span></div><div className="body"><small>{post[3]}　·　2024.08.{12 - index * 4}</small><h3>{post[1]}</h3><p>{post[2]}</p><div className="foot"><span><Heart /> {86 - index * 20}</span><span><MessageCircle /> {14 - index * 3}</span><Bookmark /></div></div></article>)}</div></section></main><footer>© 2026 NEBULA BLOG <span>Crafted with curiosity</span></footer></div>;
+  return (
+    <div className="blog">
+      <header>
+        <div className="brand"><b>N<span>•</span></b> NEBULA BLOG</div>
+        <nav>首页　探索　关于我</nav>
+        <div className="user">
+          <Search />
+          <button onClick={openSettings}>
+            <User /> {currentUser.nickname || '林墨'}
+          </button>
+        </div>
+      </header>
+      <main>
+        <section className="hero">
+          <small>THE DIGITAL GARDEN</small>
+          <h1>记录思考，<em>保持生长。</em></h1>
+          <p>一个关于设计、技术与生活的个人博客。<br />在这里，分享有趣的想法与真实的实践。</p>
+          <button>开始探索 <ArrowRight /></button>
+          <div className="metrics">128 篇文章　　24.8K 次阅读　　∞ 个灵感</div>
+        </section>
+        <section className="content">
+          <small>LATEST STORIES</small>
+          <h2>最新文章</h2>
+          <div className="posts">
+            {posts.map((post, index) => (
+              <article className={`post c${index}`} key={post[1]}>
+                <div className="cover"><span>{post[0]}</span></div>
+                <div className="body">
+                  <small>{post[3]}　·　2024.08.{12 - index * 4}</small>
+                  <h3>{post[1]}</h3>
+                  <p>{post[2]}</p>
+                  <div className="foot"><span><Heart /> {86 - index * 20}</span><span><MessageCircle /> {14 - index * 3}</span><Bookmark /></div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      </main>
+      <footer>© 2026 NEBULA BLOG <span>Crafted with curiosity</span></footer>
+    </div>
+  );
 }
+

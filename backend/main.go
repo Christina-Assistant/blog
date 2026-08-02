@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
+	server "neon-blog/cmd/server"
 	"net/http"
 	"time"
 )
@@ -40,12 +41,14 @@ func main() {
 			c.JSON(400, gin.H{"error": "邮箱不能为空，密码至少 6 位"})
 			return
 		}
-		if _, err := db.Exec("INSERT INTO users(email,password) VALUES(?,?)", x.Email, x.Password); err != nil {
+		result, err := db.Exec("INSERT INTO users(email,password) VALUES(?,?)", x.Email, x.Password)
+		if err != nil {
 			c.JSON(409, gin.H{"error": "邮箱已注册"})
 			return
 		}
 		rdb.Set(ctx, "login:"+x.Email, x.Password, 24*time.Hour)
-		c.JSON(201, gin.H{"token": "cached", "email": x.Email})
+		id, _ := result.LastInsertId()
+		c.JSON(201, gin.H{"token": "cached", "id": id, "uuid": id, "email": x.Email, "nickname": "林墨"})
 	})
 	r.POST("/api/login", func(c *gin.Context) {
 		var x struct{ Email, Password string }
@@ -53,18 +56,20 @@ func main() {
 			c.JSON(400, gin.H{"error": "bad request"})
 			return
 		}
-		var stored string
-		if err := db.QueryRow("SELECT password FROM users WHERE email=?", x.Email).Scan(&stored); err != nil || stored != x.Password {
+		var stored, nickname string
+		var id int64
+		if err := db.QueryRow("SELECT id,password,nickname FROM users WHERE email=?", x.Email).Scan(&id, &stored, &nickname); err != nil || stored != x.Password {
 			c.JSON(401, gin.H{"error": "邮箱或密码错误"})
 			return
 		}
 		rdb.Set(ctx, "login:"+x.Email, x.Password, 24*time.Hour)
-		c.JSON(200, gin.H{"token": "cached", "email": x.Email})
+		c.JSON(200, gin.H{"token": "cached", "id": id, "uuid": id, "email": x.Email, "nickname": nickname})
 	})
 	r.GET("/api/posts", func(c *gin.Context) {
 		var n int
 		db.QueryRow("SELECT COUNT(*) FROM posts").Scan(&n)
 		c.JSON(http.StatusOK, gin.H{"count": n, "items": []string{"构建属于你的数字花园", "AI 时代的个人工作流实验"}})
 	})
+	server.UserHandler{DB: db}.Register(r)
 	r.Run(":8080")
 }

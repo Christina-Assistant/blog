@@ -21,6 +21,7 @@ export default function Login() {
       const data = await response.json();
       if (!response.ok) throw Error(data.error);
       window.localStorage.setItem('nebulaLoggedIn', 'true');
+      window.localStorage.setItem('nebulaUser', JSON.stringify({ uuid: data.uuid ?? data.id, email: data.email ?? form.get('email'), nickname: data.nickname ?? '林墨' }));
       navigate('/MainPage', { replace: true });
     } catch (error) {
       setMsg(error.message);
