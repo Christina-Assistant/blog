@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN img VARCHAR(500) NULL AFTER nickname;

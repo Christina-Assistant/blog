@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 	"database/sql"
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
 	server "neon-blog/cmd/server"
-	"net/http"
-	"time"
+	"neon-blog/middleware"
 )
 
 var ctx = context.Background()
@@ -16,6 +19,10 @@ var ctx = context.Background()
 func main() {
 	db, _ := sql.Open("mysql", "root:1234@tcp(127.0.0.1:3306)/neon_blog?parseTime=true")
 	rdb := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+	minioClient, err := middleware.NewMinIO(ctx)
+	if err != nil {
+		log.Printf("MinIO 初始化失败，头像上传暂不可用: %v", err)
+	}
 	r := gin.Default()
 	r.Use(func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
@@ -56,21 +63,21 @@ func main() {
 			c.JSON(400, gin.H{"error": "bad request"})
 			return
 		}
-		var stored, nickname string
+		var stored, nickname, img string
 		var id int64
-		if err := db.QueryRow("SELECT id,password,nickname FROM users WHERE email=?", x.Email).Scan(&id, &stored, &nickname); err != nil || stored != x.Password {
+		if err := db.QueryRow("SELECT id, password, nickname, COALESCE(img, '') FROM users WHERE email=?", x.Email).Scan(&id, &stored, &nickname, &img); err != nil || stored != x.Password {
 			c.JSON(401, gin.H{"error": "邮箱或密码错误"})
 			return
 		}
 		rdb.Set(ctx, "login:"+x.Email, x.Password, 24*time.Hour)
-		c.JSON(200, gin.H{"token": "cached", "id": id, "uuid": id, "email": x.Email, "nickname": nickname})
+		c.JSON(200, gin.H{"token": "cached", "id": id, "uuid": id, "email": x.Email, "nickname": nickname, "img": img})
 	})
 	r.GET("/api/posts", func(c *gin.Context) {
 		var n int
 		db.QueryRow("SELECT COUNT(*) FROM posts").Scan(&n)
 		c.JSON(http.StatusOK, gin.H{"count": n, "items": []string{"构建属于你的数字花园", "AI 时代的个人工作流实验"}})
 	})
-	server.UserHandler{DB: db}.Register(r)
+	server.UserHandler{DB: db, MinIO: minioClient}.Register(r)
 	server.BlogHandler{DB: db}.Register(r)
 	r.Run(":8080")
 }
