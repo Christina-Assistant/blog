@@ -71,5 +71,6 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"count": n, "items": []string{"构建属于你的数字花园", "AI 时代的个人工作流实验"}})
 	})
 	server.UserHandler{DB: db}.Register(r)
+	server.BlogHandler{DB: db}.Register(r)
 	r.Run(":8080")
 }

@@ -285,9 +285,12 @@ footer {
     font-size: 40px;
   }
 
-  nav {
-    display: none;
-  }
+nav {
+  display: none;
+}
+
+nav a { color: #aaa2bc; text-decoration: none; }
+nav a:hover { color: #fff; }
 
   .panel {
     width: 90%;

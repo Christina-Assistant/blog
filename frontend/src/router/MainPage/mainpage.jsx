@@ -17,7 +17,7 @@ export default function MainPage() {
     <div className="blog">
       <header>
         <div className="brand"><b>N<span>•</span></b> NEBULA BLOG</div>
-        <nav>首页　探索　关于我</nav>
+        <nav><a href="/MainPage">首页</a>　<a href="/blog">博客管理</a>　关于我</nav>
         <div className="user">
           <Search />
           <button onClick={openSettings}>
@@ -30,7 +30,7 @@ export default function MainPage() {
           <small>THE DIGITAL GARDEN</small>
           <h1>记录思考，<em>保持生长。</em></h1>
           <p>一个关于设计、技术与生活的个人博客。<br />在这里，分享有趣的想法与真实的实践。</p>
-          <button>开始探索 <ArrowRight /></button>
+          <button onClick={() => navigate('/blog')}>开始探索 <ArrowRight /></button>
           <div className="metrics">128 篇文章　　24.8K 次阅读　　∞ 个灵感</div>
         </section>
         <section className="content">
