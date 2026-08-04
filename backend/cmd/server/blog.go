@@ -33,28 +33,64 @@ func id(c *gin.Context) (int64, bool) {
 	return v, true
 }
 func (h BlogHandler) list(c *gin.Context) {
-	o := "created_at DESC"
-	if c.Query("sort") == "likes" {
-		o = "likes DESC,created_at DESC"
-	} else if c.Query("sort") == "favorites" {
-		o = "favorites DESC,created_at DESC"
+	page := positiveQueryInt(c.Query("page"), 1)
+	pageSize := positiveQueryInt(c.Query("pageSize"), 6)
+	if pageSize > 50 {
+		pageSize = 50
 	}
-	rows, e := h.DB.Query("SELECT id,title,content,author,likes,favorites,image_url,created_at FROM blog ORDER BY " + o)
+
+	var total int
+	if e := h.DB.QueryRow("SELECT COUNT(*) FROM blog").Scan(&total); e != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "读取文章总数失败"})
+		return
+	}
+
+	offset := (page - 1) * pageSize
+	rows, e := h.DB.Query(`
+		SELECT id,title,content,author,likes,favorites,image_url,created_at
+		FROM blog
+		ORDER BY (likes + favorites) DESC, created_at DESC, id DESC
+		LIMIT ? OFFSET ?`, pageSize, offset)
 	if e != nil {
-		c.JSON(500, gin.H{"error": "读取文章失败"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "读取文章失败"})
 		return
 	}
 	defer rows.Close()
 	a := []gin.H{}
 	for rows.Next() {
 		var i, l, f int64
-		var t, x, u, img string
+		var t, x, u string
+		var img sql.NullString
 		var d interface{}
-		if rows.Scan(&i, &t, &x, &u, &l, &f, &img, &d) == nil {
-			a = append(a, gin.H{"id": i, "title": t, "content": x, "author": u, "likes": l, "favorites": f, "imageUrl": img, "createdAt": d})
+		if e := rows.Scan(&i, &t, &x, &u, &l, &f, &img, &d); e != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "解析文章失败"})
+			return
 		}
+		a = append(a, gin.H{"id": i, "title": t, "content": x, "author": u, "likes": l, "favorites": f, "score": l + f, "imageUrl": img.String, "createdAt": d})
 	}
-	c.JSON(200, gin.H{"items": a})
+	if e := rows.Err(); e != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "读取文章失败"})
+		return
+	}
+	totalPages := 0
+	if total > 0 {
+		totalPages = (total + pageSize - 1) / pageSize
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"items":      a,
+		"page":       page,
+		"pageSize":   pageSize,
+		"total":      total,
+		"totalPages": totalPages,
+	})
+}
+
+func positiveQueryInt(value string, fallback int) int {
+	parsed, e := strconv.Atoi(value)
+	if e != nil || parsed < 1 {
+		return fallback
+	}
+	return parsed
 }
 func (h BlogHandler) get(c *gin.Context) {
 	i, ok := id(c)
@@ -83,13 +119,7 @@ func (h BlogHandler) create(c *gin.Context) {
 	if x.Author == "" {
 		x.Author = "林墨"
 	}
-	l, f := 0, 0
-	if x.Likes != nil {
-		l = *x.Likes
-	}
-	if x.Favorites != nil {
-		f = *x.Favorites
-	}
+	const l, f = 0, 0
 	r, e := h.DB.Exec("INSERT INTO blog(title,content,author,likes,favorites,image_url) VALUES(?,?,?,?,?,?)", x.Title, x.Content, x.Author, l, f, x.ImageURL)
 	if e != nil {
 		c.JSON(500, gin.H{"error": "创建文章失败"})
