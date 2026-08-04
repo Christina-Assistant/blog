@@ -4,9 +4,15 @@ header { height: 76px; border-bottom: 1px solid #2b2540; padding: 0 7%; display:
 .brand b { font-size: 27px; color: #a995ff; margin-right: 9px; }
 .brand span { color: #64daf5; }
 .user { display: flex; gap: 17px; align-items: center; }
-.user .user-button { display: flex; align-items: center; gap: 8px; background: #26203d; border: 1px solid #4a3a76; border-radius: 22px; color: #fff; padding: 5px 13px 5px 5px; cursor: pointer; }
+.user .user-button { display: flex; align-items: center; gap: 8px; background: #26203d; border: 1px solid #4a3a76; border-radius: 22px; color: #fff; padding: 5px 13px 5px 5px; cursor: pointer; transition: background-color 110ms, border-color 110ms, box-shadow 110ms; }
 .header-avatar { width: 30px; height: 30px; display: grid; place-items: center; overflow: hidden; border-radius: 50%; background: linear-gradient(135deg, #8366ff, #48d7ed); font-weight: 700; }
 .header-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.header-avatar .default-avatar-icon { width: 120%; height: 120%; max-width: none; color: #e5ebf7; flex: none; }
+.user .user-button.logged-out { min-width: 50px; padding-right: 13px; background: transparent; border-color: transparent; }
+.user .user-button.logged-out .header-avatar { background: #1a1a1ac5; box-shadow: 0 1px 2px #00000070, inset 0 1px #ffffff12; }
+.user .user-button.logged-out:hover { background: #aaaaaa18; border-color: #ffffff16; }
+.user .user-button.logged-out:hover .default-avatar-icon { color: #a9c3ff; }
+.user .user-button:focus-visible { outline: 2px solid #3b91d8; outline-offset: 2px; }
 .hero { text-align: center; padding: 90px 20px 65px; }
 .hero small, .content > small { color: #9a88d0; letter-spacing: 3px; font-size: 11px; }
 .hero h1 { font-size: 58px; margin: 20px 0 12px; }

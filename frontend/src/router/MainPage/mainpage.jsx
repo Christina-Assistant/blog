@@ -1,4 +1,4 @@
-import { ArrowRight, Bookmark, Heart, MessageCircle, Search } from 'lucide-react';
+import { ArrowRight, Bookmark, CircleUserRound, Heart, MessageCircle, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './mainpage.css';
 
@@ -10,8 +10,15 @@ const posts = [
 
 export default function MainPage() {
   const navigate = useNavigate();
+  const isLoggedIn = window.localStorage.getItem('nebulaLoggedIn') === 'true';
   const currentUser = JSON.parse(window.localStorage.getItem('nebulaUser') || '{}');
-  const openSettings = () => currentUser.uuid && navigate(`/User/${currentUser.uuid}`);
+  const openAccount = () => {
+    if (isLoggedIn && currentUser.uuid) {
+      navigate(`/User/${currentUser.uuid}`);
+      return;
+    }
+    navigate('/login');
+  };
 
   return (
     <div className="blog">
@@ -20,13 +27,13 @@ export default function MainPage() {
         <nav><a href="/MainPage">首页</a>　<a href="/blog">博客管理</a>　关于我</nav>
         <div className="user">
           <Search />
-          <button className="user-button" onClick={openSettings}>
-            <span className="header-avatar">
-              {currentUser.img
+          <button className={`user-button${isLoggedIn ? '' : ' logged-out'}`} onClick={openAccount} aria-label={isLoggedIn ? '打开账号设置' : '前往登录'}>
+            <span className="header-avatar" aria-hidden="true">
+              {isLoggedIn && currentUser.img
                 ? <img src={currentUser.img} alt="用户头像" />
-                : (currentUser.nickname || '林墨').slice(0, 1)}
+                : <CircleUserRound className="default-avatar-icon" strokeWidth={1.7} />}
             </span>
-            {currentUser.nickname || '林墨'}
+            {isLoggedIn ? (currentUser.nickname || '') : ''}
           </button>
         </div>
       </header>

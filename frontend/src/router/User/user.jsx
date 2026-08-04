@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { CircleUserRound } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import './user.css';
 
@@ -69,11 +70,10 @@ export default function UserSettings() {
     }
   };
 
-  const remove = () => {
-    if (window.confirm('确定要注销账号吗？')) {
-      localStorage.clear();
-      navigate('/login', { replace: true });
-    }
+  const logout = () => {
+    localStorage.removeItem('nebulaLoggedIn');
+    localStorage.removeItem('nebulaUser');
+    navigate('/MainPage', { replace: true });
   };
 
   return (
@@ -84,7 +84,9 @@ export default function UserSettings() {
         <p className="muted">管理你的 NEBULA 账户信息</p>
         <div className="avatar-editor">
           <div className="avatar-preview">
-            {avatar ? <img src={avatar} alt="用户头像" /> : <span>{user.nickname.slice(0, 1)}</span>}
+            {avatar
+              ? <img src={avatar} alt="用户头像" />
+              : <CircleUserRound className="default-avatar-icon" aria-hidden="true" strokeWidth={1.45} />}
           </div>
           <div>
             <button type="button" className="upload" onClick={() => fileInput.current?.click()} disabled={uploading}>
@@ -99,7 +101,7 @@ export default function UserSettings() {
         <label>新密码<input name="password" type="password" minLength="6" placeholder="留空则不修改" /></label>
         {message && <div className="message">{message}</div>}
         <button className="save">保存修改</button>
-        <button type="button" className="danger" onClick={remove}>注销账号</button>
+        <button type="button" className="danger" onClick={logout}>退出登录</button>
       </form>
     </div>
   );

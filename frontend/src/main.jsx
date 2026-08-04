@@ -19,15 +19,11 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route
           path="/MainPage"
-          element={
-            <RequireAuth>
-              <MainPage />
-            </RequireAuth>
-          }
+          element={<MainPage />}
         />
         <Route path="/User/:uuid" element={<RequireAuth><UserSettings /></RequireAuth>} />
         <Route path="/blog" element={<RequireAuth><Blog /></RequireAuth>} />
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to="/MainPage" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
